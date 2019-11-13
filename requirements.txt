@@ -1,0 +1,7 @@
+earthengine-api
+httplib2
+oauth2client
+pyasn1
+rsa
+six
+google-api-python-client
