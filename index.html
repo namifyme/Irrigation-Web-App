@@ -1,63 +1,97 @@
 <!DOCTYPE html>
-<!--
-An example web page that creates and displays a custom Google Maps API Map Type
-for Earth Engine map tiles.  See Google Maps documentation on Custom Map Types
-for details.
--->
 <html>
-  <head>
-    <title>SRTM</title>
-    <script type="text/javascript"
-      src="https://maps.google.com/maps/api/js?sensor=false"></script>
-    <script type="text/javascript">
-      /**
-      * This page will be called from a Python script in App Engine that uses
-      * Jinja templates to pass information from the script to the web page.
-      * Here we get the mapid and token for the map tiles that were generated
-      * by Earth Engine using the Python script ee_appengine.py.
-      */
 
-      var MAPID = "{{ mapid }}";
-      var TOKEN = "{{ token }}";
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Irrigation App</title>
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/fonts/font-awesome.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Archivo+Black">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="https://apis.google.com/js/client:platform.js?onload=start"></script>
+    <script src="https://www.google.com/jsapi"></script>
+    <script src="assets/js/script.js"></script>
+</head>
 
-      /**
-      * The Google Maps API calls getTileUrl when it tries to display a maps
-      * tile.  This is a good place to swap in the mapid and token we got from
-      * the Python script. The other values describe other properties of the
-      * custom map type.
-      */
-      var eeMapOptions = {
-        getTileUrl: function(tile, zoom) {
-          var url = ['https://earthengine.googleapis.com/map',
-                     MAPID, zoom, tile.x, tile.y].join("/");
-          url += '?token=' + TOKEN
-          return url;
-        },
-        tileSize: new google.maps.Size(256, 256)
-      };
+<body>
+	<div class="modal fade" role="dialog" tabindex="-1" id="myModal">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4>About Us</h4><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+				</div>
+				<div class="modal-body">
+					<p class="text-center text-muted">Developed by: Lethbridge College</p>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-light" data-dismiss="modal" type="button">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+    <div class="basic">
+		<h1>Irrigation App</h1>
+		<div class="text-center border rounded shadow" id="controls-container">
+			<h3 style="background-color: #bababa;">Controls</h3>
+			<select id="select-date"></select>
+			<div class="table-responsive" style="padding-left: 0;font-weight: bold;margin-left: 35%;width: 108px;">
+				<table class="table">
+					<thead>
+						<tr>
+							<th style="padding: 2px;"></th>
+						</tr>
+					</thead>
+					<tbody class="text-left" style="width: 206px;">
+						<tr>
+							<td style="padding: 2px;">
+								<div class="form-check"><input class="form-check-input" type="checkbox" id="formCheck-1"><label class="form-check-label" for="formCheck-1">Landsat 7</label></div>
+							</td>
+						</tr>
+						<tr>
+							<td style="padding: 2px;">
+								<div class="form-check"><input class="form-check-input" type="checkbox" id="formCheck-2"><label class="form-check-label" for="formCheck-2">Landsat 8</label></div>
+							</td>
+						</tr>
+						<tr>
+							<td style="padding: 2px;">
+								<div class="form-check"><input class="form-check-input" type="checkbox" id="formCheck-3"><label class="form-check-label" for="formCheck-3">NDVI</label></div>
+							</td>
+						</tr>
+						<tr>
+							<td style="padding: 2px;">
+								<div class="form-check"><input class="form-check-input" type="checkbox" id="formCheck-4"><label class="form-check-label" for="formCheck-4">Kc</label></div>
+							</td>
+						</tr>
+						<tr>
+							<td style="padding: 2px;">
+								<div class="form-check"><input class="form-check-input" type="checkbox" id="formCheck-5"><label class="form-check-label" for="formCheck-5">ETc</label></div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<button class="btn btn-primary" type="button" style="background-color: rgb(156,157,157);">Export</button>
+		</div>
+		
+		<a class="btn btn-primary btn-lg" role="button" id="modal-info-button" data-toggle="modal" href="#myModal" style="background-color: rgb(127,156,187);"><i class="fa fa-question-circle-o"></i></a>
+		<div id="legend">
+			<h3 id="legend-heading" style="font-style: normal;font-weight: 700;font-size: 24px;">Legend</h3>
+			<h4 id="legend-label" style="font-size: 19px;font-weight: bold;">Kc, ETc</h4><img src="assets/img/legend.png">
+		</div>
+		<div id="map"></div> 
+	</div>
+		
+	<script>
+		//jinja2: sends Google Map API key from Python to javascript through here
+		basic.boot('{{ mapKey | safe }}');
+		basic.populate();
+	</script>
+	<!-- Initialize overlay.js after html and map loads -->
+	<script src="assets/js/overlay.js"></script>
+</body>
 
-      // Create the map type.
-      var mapType = new google.maps.ImageMapType(eeMapOptions);
-
-      // Initialize the Google Map and add our custom layer overlay.
-      function initialize() {
-        var myLatLng = new google.maps.LatLng(-34.397, 150.644);
-        var mapOptions = {
-          center: myLatLng,
-          zoom: 8,
-          maxZoom: 10,
-          streetViewControl: false
-        };
-
-        var map = new google.maps.Map(document.getElementById("map"),
-                                      mapOptions);
-        map.overlayMapTypes.push(mapType);
-      }
-
-      window.onload = initialize;
-    </script>
-  </head>
-  <body>
-    <div id="map" style="width: 640px; height: 480px;"></div>
-  </body>
 </html>
